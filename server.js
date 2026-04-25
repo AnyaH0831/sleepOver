@@ -13,76 +13,69 @@ const MAGIC_HOUR_API_KEYS = [
   process.env.VITE_MAGIC_HOUR_API_KEY_1,
   process.env.VITE_MAGIC_HOUR_API_KEY_2,
   process.env.VITE_MAGIC_HOUR_API_KEY_3,
-  process.env.VITE_MAGIC_HOUR_API_KEY_4,
-  process.env.VITE_MAGIC_HOUR_API_KEY_5,
-  process.env.VITE_MAGIC_HOUR_API_KEY_6,
-  process.env.VITE_MAGIC_HOUR_API_KEY_7,
-  process.env.VITE_MAGIC_HOUR_API_KEY_8,
-  process.env.VITE_MAGIC_HOUR_API_KEY_9,
-  process.env.VITE_MAGIC_HOUR_API_KEY_10,
 ].filter(Boolean)
 
-// Poll Magic Hour for video status
 app.post('/api/poll-video', async (req, res) => {
   const { jobId } = req.body
 
-  if (!jobId) {
-    return res.status(400).json({ error: 'Job ID required' })
-  }
+  if (!jobId) return res.status(400).json({ error: 'Job ID required' })
+
+  // FIX 1: Extend HTTP timeout to 8 min so the connection doesn't drop mid-poll
+  req.setTimeout(480000)
+  res.setTimeout(480000)
+
+  const apiKey = MAGIC_HOUR_API_KEYS[0]
+  if (!apiKey) return res.status(500).json({ error: 'No API key configured' })
 
   try {
-    const apiKey = MAGIC_HOUR_API_KEYS[0]
-    if (!apiKey) {
-      return res.status(500).json({ error: 'No API key configured' })
-    }
+    // FIX 2: Wait 10s first — Magic Hour needs time to queue the job
+    console.log(`Starting poll for job: ${jobId}`)
+    await new Promise(resolve => setTimeout(resolve, 10000))
 
-    // Wait 2 seconds before first check to let video generation start
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // Poll with reasonable intervals - max 6 minutes, checking every 3 seconds
-    for (let i = 0; i < 120; i++) {
+    // FIX 3: Poll every 5 seconds for up to 6 minutes (72 attempts = 360s + 10s head start)
+    for (let i = 0; i < 72; i++) {
       const response = await fetch(
-        `https://api.magichour.ai/v1/video-projects/${jobId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
+        `https://api.magichour.ai/v1/text-to-video/${jobId}`,
+        { headers: { Authorization: `Bearer ${apiKey}` } }
       )
 
       const data = await response.json().catch(() => ({}))
+      console.log(`Poll ${i + 1}: HTTP ${response.status} | status=${data.status}`)
 
-      if (response.ok && data) {
-        console.log(`✓ Poll ${i + 1}: status=${data.status}`)
-
+      if (response.ok) {
         if (data.status === 'complete') {
-          const url = data.url || data.downloads?.[0]?.url
+          // FIX 4: Check downloads array first (Magic Hour's actual response shape),
+          // then fall back to assets and top-level url
+          const url = data.downloads?.[0]?.url
+                   || data.assets?.[0]?.url
+                   || data.url
+                   || null
+
           if (url) {
-            console.log('Video ready:', url.substring(0, 50) + '...')
+            console.log('Video ready:', url.substring(0, 80))
             return res.json({ status: 'complete', videoUrl: url })
+          } else {
+            // Complete but no URL — log full response so we can debug
+            console.error('Complete but no URL. Response:', JSON.stringify(data, null, 2))
+            return res.json({ status: 'error', error: 'Video completed but no download URL was returned' })
           }
         }
 
         if (data.status === 'error' || data.status === 'failed') {
-          return res.json({ status: 'error', error: data.error_message || 'Generation failed' })
+          return res.json({ status: 'error', error: data.error_message || data.message || 'Generation failed' })
         }
 
-        // Keep polling if still processing
-        await new Promise(resolve => setTimeout(resolve, 3000))
+        // 'queued' or 'in_progress' — keep waiting
       } else {
-        // Keep polling even on errors
-        console.log(`- Poll ${i + 1}: HTTP ${response.status}`)
-        await new Promise(resolve => setTimeout(resolve, 3000))
+        console.log('Non-OK response body:', JSON.stringify(data))
+        // Don't throw — transient errors are common, just keep polling
       }
+
+      await new Promise(resolve => setTimeout(resolve, 5000))
     }
 
-    // Final timeout message
-    return res.json({
-      status: 'timeout',
-      message: 'Video is still generating. Check back shortly.',
-      jobId,
-    })
+    return res.json({ status: 'error', error: 'Timed out after 6 minutes. Please try again.' })
+
   } catch (error) {
     console.error('Poll error:', error)
     res.status(500).json({ error: error.message })
@@ -91,5 +84,5 @@ app.post('/api/poll-video', async (req, res) => {
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-  console.log(`🎬 Dream Server running on http://localhost:${PORT}`)
+  console.log(`Dream Server running on http://localhost:${PORT}`)
 })
