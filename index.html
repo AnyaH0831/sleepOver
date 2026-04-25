@@ -112,7 +112,7 @@
     </div>
 
     <script type="module">
-      import { generateDreamVideo, pollVideoJob } from './api.js'
+      import { generateDreamVideo, pollVideoJob } from '/api.js'
 
       const form = document.getElementById('dreamForm')
       const dreamInput = document.getElementById('dreamInput')
@@ -139,22 +139,26 @@
 
           // Poll backend for video
           messageDiv.innerHTML = `<div class="message success">Generating video... this usually takes 1-2 minutes</div>`
+          // pollVideoJob now blocks until the server gets a final answer (complete or error)
           const result = await pollVideoJob(jobId)
-          
-          if (result.status === 'complete' && result.videoUrl) {
+
+          if (result.videoUrl) {
             messageDiv.innerHTML = `<div class="message success">✨ Your dream video is ready!</div>`
             videoContainer.innerHTML = `
-              <video width="100%" controls style="margin-top: 20px; border-radius: 8px; max-width: 600px;">
+              <video
+                width="100%"
+                controls
+                autoplay
+                loop
+                muted
+                playsinline
+                style="margin-top: 20px; border-radius: 8px; max-width: 600px; display: block;">
                 <source src="${result.videoUrl}" type="video/mp4">
                 Your browser does not support the video tag.
               </video>
             `
-          } else if (result.status === 'timeout') {
-            messageDiv.innerHTML = `<div class="message success">Video is still generating. <a href="https://app.magichour.ai" target="_blank">Check on Magic Hour</a></div>`
-          } else if (result.status === 'error') {
-            messageDiv.innerHTML = `<div class="message error">Error: ${result.error}</div>`
           } else {
-            messageDiv.innerHTML = `<div class="message error">Unexpected response: ${JSON.stringify(result)}</div>`
+            messageDiv.innerHTML = `<div class="message error">No video URL returned. Check server logs.</div>`
           }
           
           dreamInput.value = ''

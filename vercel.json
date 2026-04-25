@@ -1,13 +1,13 @@
 {
   "functions": {
-    "api/server.js": {
+    "server.js": {
       "runtime": "nodejs18.x"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/server.js"
+      "destination": "/server.js"
     }
   ]
 }
