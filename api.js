@@ -1,15 +1,22 @@
 // ─── Magic Hour key rotation ──────────────────────────────────────────────────
-// Reads up to 3 Magic Hour API keys from .env and rotates when one is exhausted.
+// Reads up to 10 Magic Hour API keys from .env and rotates when one is exhausted.
 // "Exhausted" = 402 Payment Required or a credits-related error message.
 
 const MH_KEYS = [
   import.meta.env.VITE_MAGIC_HOUR_API_KEY_1,
   import.meta.env.VITE_MAGIC_HOUR_API_KEY_2,
   import.meta.env.VITE_MAGIC_HOUR_API_KEY_3,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_4,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_5,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_6,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_7,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_8,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_9,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_10,
 ].filter(Boolean)
 
 if (MH_KEYS.length === 0) {
-  console.error('No Magic Hour API keys found. Add VITE_MAGIC_HOUR_API_KEY_1 (and optionally _2, _3) to your .env')
+  console.error('No Magic Hour API keys found. Add VITE_MAGIC_HOUR_API_KEY_1 through _10 to your .env')
 }
 
 // Persisted index so rotation survives across calls within a session.
@@ -18,7 +25,7 @@ const exhausted = new Set()
 
 function getActiveKey() {
   const available = MH_KEYS.filter((_, i) => !exhausted.has(i))
-  if (available.length === 0) throw new Error('All Magic Hour API keys are exhausted. Please add credits or use new keys.')
+  if (available.length === 0) throw new Error('All 10 Magic Hour API keys are exhausted. Please add credits or new keys.')
   // Return the first non-exhausted key and its original index
   const idx = MH_KEYS.findIndex((_, i) => !exhausted.has(i))
   return { key: MH_KEYS[idx], idx }
@@ -65,43 +72,6 @@ async function magicHourFetch(url, options = {}, retries = MH_KEYS.length) {
   }
 
   throw new Error('All Magic Hour API keys are exhausted.')
-}
-
-
-// ─── Groq: Enhance dream text into a cinematic video prompt ──────────────────
-
-export async function enhanceDreamPrompt(dreamText) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  if (!apiKey) throw new Error('VITE_GROQ_API_KEY is not set in .env')
-
-  const response = await fetch(
-    `https://api.groq.com/openai/v1/chat/completions`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'user',
-            content: `Convert to a short cinematic video prompt (20 words max). Focus on motion, lighting, mood, and surreal atmosphere.\n\n${dreamText}`,
-          },
-        ],
-        max_tokens: 100,
-      }),
-    }
-  )
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
-    throw new Error(err.error?.message || `Groq API error: ${response.status}`)
-  }
-
-  const data = await response.json()
-  return data.choices[0].message.content.trim()
 }
 
 
@@ -158,6 +128,11 @@ export async function pollVideoJob(jobId, keyIdx) {
     if (result.status === 'error') {
       console.log('❌ Error status')
       throw new Error(result.error)
+    }
+
+    if (result.status === 'timeout') {
+      console.log('⏱️  Timeout - video still generating')
+      return { status: 'timeout', message: result.message, jobId: result.jobId }
     }
 
     // Still processing
