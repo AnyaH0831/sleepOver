@@ -13,6 +13,13 @@ const MAGIC_HOUR_API_KEYS = [
   process.env.VITE_MAGIC_HOUR_API_KEY_1,
   process.env.VITE_MAGIC_HOUR_API_KEY_2,
   process.env.VITE_MAGIC_HOUR_API_KEY_3,
+  process.env.VITE_MAGIC_HOUR_API_KEY_4,
+  process.env.VITE_MAGIC_HOUR_API_KEY_5,
+  process.env.VITE_MAGIC_HOUR_API_KEY_6,
+  process.env.VITE_MAGIC_HOUR_API_KEY_7,
+  process.env.VITE_MAGIC_HOUR_API_KEY_8,
+  process.env.VITE_MAGIC_HOUR_API_KEY_9,
+  process.env.VITE_MAGIC_HOUR_API_KEY_10,
 ].filter(Boolean)
 
 // Poll Magic Hour for video status
@@ -32,8 +39,8 @@ app.post('/api/poll-video', async (req, res) => {
     // Wait 2 seconds before first check to let video generation start
     await new Promise(resolve => setTimeout(resolve, 2000))
 
-    // Poll with reasonable intervals - max 2 minutes, checking every 3 seconds
-    for (let i = 0; i < 40; i++) {
+    // Poll with reasonable intervals - max 6 minutes, checking every 3 seconds
+    for (let i = 0; i < 120; i++) {
       const response = await fetch(
         `https://api.magichour.ai/v1/video-projects/${jobId}`,
         {
@@ -52,7 +59,7 @@ app.post('/api/poll-video', async (req, res) => {
         if (data.status === 'complete') {
           const url = data.url || data.downloads?.[0]?.url
           if (url) {
-            console.log('✅ Video ready:', url.substring(0, 50) + '...')
+            console.log('Video ready:', url.substring(0, 50) + '...')
             return res.json({ status: 'complete', videoUrl: url })
           }
         }
