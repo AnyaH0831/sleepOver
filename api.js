@@ -106,7 +106,12 @@ export async function pollVideoJob(jobId, keyIdx) {
   console.log(`Polling job ${jobId} via backend`)
   
   try {
-    const response = await fetch('http://localhost:3001/api/poll-video', {
+    // Use relative path so it works in both local dev and production
+    const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001/api/poll-video'
+      : '/api/poll-video'
+    
+    const response = await fetch(backendUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jobId }),
