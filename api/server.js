@@ -42,7 +42,7 @@ app.post('/api/poll-video', async (req, res) => {
     // Poll with reasonable intervals - max 6 minutes, checking every 3 seconds
     for (let i = 0; i < 120; i++) {
       const response = await fetch(
-        `https://api.magichour.ai/v1/video-projects/${jobId}`,
+        `https://api.magichour.ai/v1/text-to-video/${jobId}`,
         {
           headers: {
             Authorization: `Bearer ${apiKey}`,
@@ -89,7 +89,13 @@ app.post('/api/poll-video', async (req, res) => {
   }
 })
 
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  console.log(`🎬 Dream Server running on http://localhost:${PORT}`)
-})
+// Export for Vercel serverless
+export default app
+
+// Local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3001
+  app.listen(PORT, () => {
+    console.log(`🎬 Dream Server running on http://localhost:${PORT}`)
+  })
+}

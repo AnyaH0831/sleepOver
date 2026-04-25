@@ -141,11 +141,11 @@
           messageDiv.innerHTML = `<div class="message success">Generating video... this usually takes 1-2 minutes</div>`
           const result = await pollVideoJob(jobId)
           
-          if (result.status === 'complete' && result.url) {
+          if (result.status === 'complete' && result.videoUrl) {
             messageDiv.innerHTML = `<div class="message success">✨ Your dream video is ready!</div>`
             videoContainer.innerHTML = `
               <video width="100%" controls style="margin-top: 20px; border-radius: 8px; max-width: 600px;">
-                <source src="${result.url}" type="video/mp4">
+                <source src="${result.videoUrl}" type="video/mp4">
                 Your browser does not support the video tag.
               </video>
             `
