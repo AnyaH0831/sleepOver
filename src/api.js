@@ -114,16 +114,16 @@ export async function enhanceDreamPrompt(dreamText) {
 }
 
 
-// ─── Magic Hour: Text-to-Video (5 seconds) ───────────────────────────────────
+// ─── Magic Hour: Text-to-Video ──────────────────────────────────────────────
 
-export async function generateDreamVideo(prompt) {
+export async function generateDreamVideo(prompt, videoLength = 5) {
   const { res, key, idx } = await magicHourFetch(
     'https://api.magichour.ai/v1/text-to-video',
     {
       method: 'POST',
       body: JSON.stringify({
         aspect_ratio: '16:9',
-        end_seconds: 5,
+        end_seconds: videoLength,
         style: {
           prompt,
         },
