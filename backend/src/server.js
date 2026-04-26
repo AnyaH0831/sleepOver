@@ -7,14 +7,29 @@ import mongoose from 'mongoose'
 dotenv.config()
 
 const app = express()
-app.use(cors())
+
+// ─── CORS Configuration ────────────────────────────────────────────────────
+const CORS_ORIGINS = [
+  'http://localhost:5173',      // Vite dev server
+  'http://localhost:3000',      // Alternative frontend port
+  'http://localhost:3001',      // Same host requests
+  process.env.FRONTEND_URL,     // Production frontend (from .env)
+].filter(Boolean)
+
+app.use(cors({
+  origin: CORS_ORIGINS,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.use(express.json())
 
 // ─── MongoDB Connection ────────────────────────────────────────────────────
-const MONGODB_URI = process.env.MONGODB_URI
+const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI
 
 if (!MONGODB_URI) {
-  console.warn('⚠️  MONGODB_URI not found in .env')
+  console.warn('⚠️  MONGO_URI or MONGODB_URI not found in .env')
 } else {
   mongoose.connect(MONGODB_URI, {
     dbName: 'SleepOver',

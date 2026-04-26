@@ -1,3 +1,7 @@
+// ─── API Base URL Configuration ───────────────────────────────────────────────
+// Uses environment variable for backend URL, defaults to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+
 // ─── Magic Hour key rotation ──────────────────────────────────────────────────
 // Reads up to 10 Magic Hour API keys from .env and rotates when one is exhausted.
 // "Exhausted" = 402 Payment Required or a credits-related error message.
@@ -153,7 +157,7 @@ export async function generateDreamVideo(prompt, videoLength = 5) {
 export async function pollVideoJob(jobId, keyIdx) {
   console.log(`Sending job ${jobId} to backend poller with key ${keyIdx}`)
 
-  const response = await fetch('http://localhost:3001/api/poll-video', {
+  const response = await fetch(`${API_BASE_URL}/api/poll-video`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jobId, keyIdx }),
