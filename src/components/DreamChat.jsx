@@ -25,6 +25,20 @@ export default function DreamChat({ isDarkMode }) {
       const { jobId } = await generateDreamVideo(text);
       console.log('Job created:', jobId);
 
+      // Save dream to MongoDB
+      const saveDreamRes = await fetch('http://localhost:3001/api/save-dream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: text, jobId })
+      });
+      
+      if (!saveDreamRes.ok) {
+        console.warn('Failed to save dream to database');
+      } else {
+        const savedDream = await saveDreamRes.json();
+        console.log('Dream saved to MongoDB:', savedDream.dreamId);
+      }
+
       // Poll backend for video
       setMessage('Generating video... this usually takes 1-2 minutes');
       const result = await pollVideoJob(jobId);
@@ -67,7 +81,7 @@ export default function DreamChat({ isDarkMode }) {
 
   const darkModeContainerStyle = {
     flex: 1,
-    background: 'linear-gradient(180deg, #2d1b4e 0%, #1a2d4d 100%)',
+    background: 'linear-gradient(180deg, #0f1b2e 0%, #4a2a5f 100%)',
     padding: '2rem 1.5rem',
     minHeight: 'calc(100vh - 52px)',
     fontFamily: "'Courier New', Courier, monospace",

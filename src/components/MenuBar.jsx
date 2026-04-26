@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function MenuBar({ isDarkMode, toggleDarkMode }) {
+export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onViewChange }) {
   const [hoveredButton, setHoveredButton] = useState(null);
 
   const lightModeStyle = {
@@ -62,7 +62,7 @@ export default function MenuBar({ isDarkMode, toggleDarkMode }) {
   const darkModeStyle = {
     nav: {
       width: '100%',
-      backgroundColor: '#3d2564',
+      backgroundColor: '#1a2d4d',
       boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
       padding: '0.5rem 1.5rem',
       fontFamily: "'Courier New', Courier, monospace",
@@ -134,15 +134,24 @@ export default function MenuBar({ isDarkMode, toggleDarkMode }) {
             style={styles.addButton}
             onMouseEnter={() => setHoveredButton('add')}
             onMouseLeave={() => setHoveredButton(null)}
+            onClick={() => onViewChange('chat')}
+            title="Create new dream"
           >
             +
           </button>
 
           {/* Archive button */}
           <button
-            style={styles.archiveButton}
+            style={{
+              ...styles.archiveButton,
+              backgroundColor: currentView === 'archive' 
+                ? (isDarkMode ? '#b080c0' : '#ffafcc')
+                : styles.archiveButton.backgroundColor
+            }}
             onMouseEnter={() => setHoveredButton('archive')}
             onMouseLeave={() => setHoveredButton(null)}
+            onClick={() => onViewChange('archive')}
+            title="View archived dreams"
           >
             Archive
           </button>

@@ -1,15 +1,22 @@
 // ─── Magic Hour key rotation ──────────────────────────────────────────────────
-// Reads up to 3 Magic Hour API keys from .env and rotates when one is exhausted.
+// Reads up to 10 Magic Hour API keys from .env and rotates when one is exhausted.
 // "Exhausted" = 402 Payment Required or a credits-related error message.
 
 const MH_KEYS = [
   import.meta.env.VITE_MAGIC_HOUR_API_KEY_1,
   import.meta.env.VITE_MAGIC_HOUR_API_KEY_2,
   import.meta.env.VITE_MAGIC_HOUR_API_KEY_3,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_4,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_5,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_6,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_7,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_8,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_9,
+  import.meta.env.VITE_MAGIC_HOUR_API_KEY_10,
 ].filter(Boolean)
 
 if (MH_KEYS.length === 0) {
-  console.error('No Magic Hour API keys found. Add VITE_MAGIC_HOUR_API_KEY_1 (and optionally _2, _3) to your .env')
+  console.error('No Magic Hour API keys found. Add VITE_MAGIC_HOUR_API_KEY_1 through VITE_MAGIC_HOUR_API_KEY_10 to your .env')
 }
 
 // Persisted index so rotation survives across calls within a session.
@@ -122,12 +129,22 @@ export async function generateDreamVideo(prompt) {
     }
   )
 
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    console.error('Failed to create video job:', { status: res.status, error: errorData })
+    throw new Error(`Magic Hour creation failed: ${res.status} - ${errorData.message || errorData.error || 'Unknown error'}`)
+  }
+
   const fullResponse = await res.json()
   console.log('Magic Hour full response:', JSON.stringify(fullResponse, null, 2))
   
   const jobId = fullResponse.id || fullResponse.job_id
-  console.log('Job ID:', jobId)
+  if (!jobId) {
+    console.error('No job ID in response:', fullResponse)
+    throw new Error('No job ID returned from Magic Hour API')
+  }
   
+  console.log('✅ Job created with ID:', jobId)
   return { jobId, videoUrl: null, keyIdx: idx }
 }
 
