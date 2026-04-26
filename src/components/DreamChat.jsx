@@ -3,6 +3,7 @@ import { generateDreamVideo, pollVideoJob } from '../api.js';
 
 export default function DreamChat({ isDarkMode }) {
   const [dreamText, setDreamText] = useState('');
+  const [videoLength, setVideoLength] = useState(5);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
@@ -22,7 +23,7 @@ export default function DreamChat({ isDarkMode }) {
       // Generate video with Magic Hour
       setMessage('Creating your dream video...');
       setMessageType('success');
-      const { jobId, keyIdx } = await generateDreamVideo(text);
+      const { jobId, keyIdx } = await generateDreamVideo(text, videoLength);
       console.log('Job created:', jobId);
 
       // Save dream to MongoDB
@@ -163,6 +164,33 @@ export default function DreamChat({ isDarkMode }) {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
+            <label style={{ color: isDarkMode ? '#e0d4f0' : '#333', fontWeight: '500', fontFamily: "'Courier New', Courier, monospace" }}>Video Length:</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {[5, 10, 15].map((length) => (
+                <button
+                  key={length}
+                  type="button"
+                  onClick={() => setVideoLength(length)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: videoLength === length 
+                      ? (isDarkMode ? '#b080c0' : '#bde0fe')
+                      : (isDarkMode ? '#8a6bb8' : '#cdb4db'),
+                    color: isDarkMode ? '#fff' : '#333',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    fontWeight: videoLength === length ? '600' : '500',
+                    fontFamily: "'Courier New', Courier, monospace",
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {length}s
+                </button>
+              ))}
+            </div>
+          </div>
           <textarea
             value={dreamText}
             onChange={(e) => setDreamText(e.target.value)}
