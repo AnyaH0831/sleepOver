@@ -39,9 +39,11 @@ function markExhausted(idx) {
 function isCreditsError(status, body) {
   // 402 = payment required / out of credits
   if (status === 402) return true
+  // 404 might mean invalid job (bad API key created it)
+  if (status === 404) return true
   // Some APIs return 400/403 with a credits message
   const msg = (body?.message || body?.error || '').toLowerCase()
-  return msg.includes('credit') || msg.includes('quota') || msg.includes('insufficient')
+  return msg.includes('credit') || msg.includes('quota') || msg.includes('insufficient') || msg.includes('invalid') || msg.includes('unauthorized')
 }
 
 // Wrapper that auto-rotates keys on credit exhaustion
@@ -151,7 +153,7 @@ export async function generateDreamVideo(prompt) {
 export async function pollVideoJob(jobId, keyIdx) {
   console.log(`Sending job ${jobId} to backend poller with key ${keyIdx}`)
 
-  const response = await fetch('/api/poll-video', {
+  const response = await fetch('http://localhost:3001/api/poll-video', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jobId, keyIdx }),

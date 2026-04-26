@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateDreamVideo, pollVideoJob } from '../../api.js';
+import { generateDreamVideo, pollVideoJob } from '../api.js';
 
 export default function DreamChat({ isDarkMode }) {
   const [dreamText, setDreamText] = useState('');
@@ -22,7 +22,7 @@ export default function DreamChat({ isDarkMode }) {
       // Generate video with Magic Hour
       setMessage('Creating your dream video...');
       setMessageType('success');
-      const { jobId } = await generateDreamVideo(text);
+      const { jobId, keyIdx } = await generateDreamVideo(text);
       console.log('Job created:', jobId);
 
       // Save dream to MongoDB
@@ -41,12 +41,12 @@ export default function DreamChat({ isDarkMode }) {
 
       // Poll backend for video
       setMessage('Generating video... this usually takes 1-2 minutes');
-      const result = await pollVideoJob(jobId);
+      const result = await pollVideoJob(jobId, keyIdx);
 
-      if (result.status === 'complete' && result.url) {
+      if (result.status === 'complete' && result.videoUrl) {
         setMessage('✨ Your dream video is ready!');
         setMessageType('success');
-        setVideoUrl(result.url);
+        setVideoUrl(result.videoUrl);
       } else if (result.status === 'timeout') {
         setMessage(
           'Video is still generating. Check on Magic Hour'

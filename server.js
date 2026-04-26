@@ -111,13 +111,21 @@ const MAGIC_HOUR_API_KEYS = [
   process.env.VITE_MAGIC_HOUR_API_KEY_10
 ].filter(Boolean)
 
+console.log(`📌 Loaded ${MAGIC_HOUR_API_KEYS.length} Magic Hour API keys`)
+MAGIC_HOUR_API_KEYS.forEach((key, i) => {
+  console.log(`   Key ${i + 1}: ${key?.substring(0, 10)}...${key?.substring(key.length - 10)}`)
+})
+
 // Poll Magic Hour for video status
 app.post('/api/poll-video', async (req, res) => {
-  const { jobId } = req.body
+  const { jobId, keyIdx } = req.body
 
   if (!jobId) {
     return res.status(400).json({ error: 'Job ID required' })
   }
+
+  console.log(`\n🔍 Starting poll for job: ${jobId}`)
+  console.log(`📊 Using ${MAGIC_HOUR_API_KEYS.length} API keys`)
 
   try {
     if (MAGIC_HOUR_API_KEYS.length === 0) {
@@ -127,15 +135,27 @@ app.post('/api/poll-video', async (req, res) => {
     // Wait 2 seconds before first check to let video generation start
     await new Promise(resolve => setTimeout(resolve, 2000))
 
-    let currentKeyIndex = 0
+    // Use the same key that created the video
+    let currentKeyIndex = keyIdx || 0
     let pollCount = 0
+
+    console.log(`🔑 Starting with key ${currentKeyIndex + 1}/${MAGIC_HOUR_API_KEYS.length}`)
 
     // Poll with reasonable intervals - max 2 minutes, checking every 3 seconds
     for (let i = 0; i < 40; i++) {
       const apiKey = MAGIC_HOUR_API_KEYS[currentKeyIndex]
       pollCount++
       
-      const response = await fetch(
+      if (!apiKey) {
+        console.error(`❌ Key index ${currentKeyIndex} is out of bounds! Only ${MAGIC_HOUR_API_KEYS.length} keys loaded`)
+        return res.json({
+          status: 'error',
+          error: `Invalid key index: ${currentKeyIndex}`
+        })
+      }
+
+      // Try the correct endpoint
+      let response = await fetch(
         `https://api.magichour.ai/v1/video-projects/${jobId}`,
         {
           headers: {
@@ -144,6 +164,19 @@ app.post('/api/poll-video', async (req, res) => {
           },
         }
       )
+
+      // If 404, try alternative endpoint
+      if (response.status === 404) {
+        response = await fetch(
+          `https://api.magichour.ai/v1/text-to-video/${jobId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+      }
 
       const data = await response.json().catch(() => ({}))
 
