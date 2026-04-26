@@ -16,7 +16,7 @@ const MAGIC_HOUR_API_KEYS = [
 ].filter(Boolean)
 
 app.post('/api/poll-video', async (req, res) => {
-  const { jobId } = req.body
+  const { jobId, keyIdx } = req.body
 
   if (!jobId) return res.status(400).json({ error: 'Job ID required' })
 
@@ -24,7 +24,9 @@ app.post('/api/poll-video', async (req, res) => {
   req.setTimeout(480000)
   res.setTimeout(480000)
 
-  const apiKey = MAGIC_HOUR_API_KEYS[0]
+  // Use the same key that created the video
+  const apiKeyIndex = keyIdx || 0
+  const apiKey = MAGIC_HOUR_API_KEYS[apiKeyIndex]
   if (!apiKey) return res.status(500).json({ error: 'No API key configured' })
 
   try {
@@ -34,10 +36,19 @@ app.post('/api/poll-video', async (req, res) => {
 
     // FIX 3: Poll every 5 seconds for up to 6 minutes (72 attempts = 360s + 10s head start)
     for (let i = 0; i < 72; i++) {
-      const response = await fetch(
+      // Try both endpoints - text-to-video (new) and video-projects (old)
+      let response = await fetch(
         `https://api.magichour.ai/v1/text-to-video/${jobId}`,
         { headers: { Authorization: `Bearer ${apiKey}` } }
       )
+
+      // If 404, try the alternative endpoint
+      if (response.status === 404) {
+        response = await fetch(
+          `https://api.magichour.ai/v1/video-projects/${jobId}`,
+          { headers: { Authorization: `Bearer ${apiKey}` } }
+        )
+      }
 
       const data = await response.json().catch(() => ({}))
       console.log(`Poll ${i + 1}: HTTP ${response.status} | status=${data.status}`)

@@ -112,7 +112,7 @@
     </div>
 
     <script type="module">
-      import { generateDreamVideo, pollVideoJob } from '/api.js'
+      import { generateDreamVideo, pollVideoJob } from './src/api.js'
 
       const form = document.getElementById('dreamForm')
       const dreamInput = document.getElementById('dreamInput')
@@ -134,13 +134,13 @@
         try {
           // Generate video with Magic Hour
           messageDiv.innerHTML = `<div class="message success">Creating your dream video...</div>`
-          const { jobId } = await generateDreamVideo(dreamText)
+          const { jobId, keyIdx } = await generateDreamVideo(dreamText)
           console.log('Job created:', jobId)
 
           // Poll backend for video
           messageDiv.innerHTML = `<div class="message success">Generating video... this usually takes 1-2 minutes</div>`
           // pollVideoJob now blocks until the server gets a final answer (complete or error)
-          const result = await pollVideoJob(jobId)
+          const result = await pollVideoJob(jobId, keyIdx)
 
           if (result.videoUrl) {
             messageDiv.innerHTML = `<div class="message success">✨ Your dream video is ready!</div>`
