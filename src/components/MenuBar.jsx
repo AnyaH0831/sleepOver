@@ -27,7 +27,7 @@ export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onVie
       justifyContent: 'center',
       fontFamily: "'Courier New', Courier, monospace",
       transition: 'all 0.2s ease',
-      transform: hoveredButton === 'add' ? 'scale(1.1) rotate(5deg)' : 'scale(1) rotate(0deg)',
+      transform: hoveredButton === 'add' ? 'scale(1.1)' : 'scale(1)',
       boxShadow: hoveredButton === 'add' ? '0 4px 8px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.1)'
     },
     archiveButton: {
@@ -54,7 +54,7 @@ export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onVie
       alignItems: 'center',
       fontFamily: "'Courier New', Courier, monospace",
       transition: 'all 0.3s ease',
-      transform: hoveredButton === 'dark' ? 'rotate(20deg)' : 'rotate(0deg)',
+      transform: hoveredButton === 'dark' ? 'scale(1.1)' : 'scale(1)',
       boxShadow: hoveredButton === 'dark' ? '0 4px 8px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.1)'
     }
   };
@@ -83,7 +83,7 @@ export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onVie
       justifyContent: 'center',
       fontFamily: "'Courier New', Courier, monospace",
       transition: 'all 0.2s ease',
-      transform: hoveredButton === 'add' ? 'scale(1.1) rotate(5deg)' : 'scale(1) rotate(0deg)',
+      transform: hoveredButton === 'add' ? 'scale(1.1)' : 'scale(1)',
       boxShadow: hoveredButton === 'add' ? '0 4px 8px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.2)'
     },
     archiveButton: {
@@ -110,7 +110,7 @@ export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onVie
       alignItems: 'center',
       fontFamily: "'Courier New', Courier, monospace",
       transition: 'all 0.3s ease',
-      transform: hoveredButton === 'dark' ? 'rotate(20deg)' : 'rotate(0deg)',
+      transform: hoveredButton === 'dark' ? 'scale(1.1)' : 'scale(1)',
       boxShadow: hoveredButton === 'dark' ? '0 4px 8px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.2)'
     }
   };
@@ -131,7 +131,12 @@ export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onVie
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {/* Add New button - just '+' */}
           <button
-            style={styles.addButton}
+            style={{
+              ...styles.addButton,
+              backgroundColor: currentView === 'chat' 
+                ? (isDarkMode ? '#b080c0' : '#bde0fe')
+                : (isDarkMode ? '#8a6bb8' : '#cdb4db')
+            }}
             onMouseEnter={() => setHoveredButton('add')}
             onMouseLeave={() => setHoveredButton(null)}
             onClick={() => onViewChange('chat')}
@@ -145,8 +150,8 @@ export default function MenuBar({ isDarkMode, toggleDarkMode, currentView, onVie
             style={{
               ...styles.archiveButton,
               backgroundColor: currentView === 'archive' 
-                ? (isDarkMode ? '#b080c0' : '#ffafcc')
-                : styles.archiveButton.backgroundColor
+                ? (isDarkMode ? '#b080c0' : '#bde0fe')
+                : (isDarkMode ? '#8a6bb8' : '#cdb4db')
             }}
             onMouseEnter={() => setHoveredButton('archive')}
             onMouseLeave={() => setHoveredButton(null)}
